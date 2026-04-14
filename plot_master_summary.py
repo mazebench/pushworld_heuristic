@@ -16,6 +16,147 @@ REPO_ROOT = Path(__file__).resolve().parent
 DEFAULT_INPUT = REPO_ROOT / "master_summary.json"
 DEFAULT_SVG = REPO_ROOT / "master_summary_solved_curve.svg"
 DEFAULT_PNG = REPO_ROOT / "master_summary_solved_curve.png"
+GOOGLE_DEEPMIND_BLUE = "#1f77b4"
+
+GOOGLE_DEEPMIND_CURVES: list[list[tuple[float, float]]] = [
+    [
+        (0.007, 16),
+        (0.015, 19),
+        (0.050, 24),
+        (0.200, 30),
+        (0.600, 37),
+        (1.500, 49),
+        (3.500, 59),
+        (6.000, 62),
+        (15.000, 74),
+        (40.000, 80),
+        (120.000, 86),
+        (260.000, 98),
+        (600.000, 106),
+        (1500.000, 109),
+    ],
+    [
+        (0.004, 10),
+        (0.008, 18),
+        (0.040, 24),
+        (0.120, 27),
+        (0.350, 38),
+        (1.100, 43),
+        (2.500, 49),
+        (4.000, 60),
+        (10.000, 68),
+        (30.000, 80),
+        (90.000, 88),
+        (250.000, 94),
+        (700.000, 108),
+        (1800.000, 113),
+    ],
+    [
+        (0.004, 9),
+        (0.008, 16),
+        (0.030, 20),
+        (0.080, 25),
+        (0.250, 30),
+        (0.900, 44),
+        (1.800, 49),
+        (4.500, 59),
+        (10.000, 64),
+        (20.000, 73),
+        (60.000, 81),
+        (140.000, 85),
+        (300.000, 90),
+        (550.000, 105),
+        (1200.000, 111),
+        (1900.000, 114),
+    ],
+    [
+        (0.004, 0),
+        (0.005, 13),
+        (0.030, 20),
+        (0.120, 25),
+        (0.700, 37),
+        (1.500, 49),
+        (6.000, 60),
+        (22.000, 73),
+        (45.000, 85),
+        (110.000, 90),
+        (280.000, 96),
+        (550.000, 109),
+        (800.000, 121),
+        (1100.000, 133),
+        (1400.000, 137),
+    ],
+    [
+        (0.030, 0),
+        (0.060, 7),
+        (0.120, 14),
+        (0.400, 25),
+        (0.900, 38),
+        (2.500, 49),
+        (8.000, 58),
+        (18.000, 61),
+        (35.000, 65),
+        (80.000, 73),
+        (180.000, 79),
+        (420.000, 85),
+        (850.000, 93),
+        (1300.000, 95),
+    ],
+    [
+        (0.010, 2),
+        (0.030, 3),
+        (0.070, 7),
+        (0.180, 13),
+        (0.700, 16),
+        (1.300, 20),
+        (2.000, 28),
+        (6.000, 33),
+        (9.000, 37),
+        (20.000, 45),
+        (45.000, 49),
+        (100.000, 53),
+        (220.000, 61),
+        (600.000, 69),
+        (1200.000, 73),
+        (1700.000, 75),
+    ],
+    [
+        (0.006, 0),
+        (0.008, 5),
+        (0.012, 13),
+        (0.020, 25),
+        (0.032, 37),
+        (0.050, 49),
+        (0.090, 58),
+        (0.130, 63),
+        (0.300, 73),
+        (0.700, 79),
+        (5.000, 82),
+        (15.000, 93),
+        (60.000, 97),
+        (300.000, 109),
+        (700.000, 113),
+        (1800.000, 115),
+    ],
+    [
+        (0.006, 0),
+        (0.009, 13),
+        (0.015, 25),
+        (0.025, 37),
+        (0.050, 49),
+        (0.100, 58),
+        (0.180, 67),
+        (0.400, 73),
+        (0.800, 80),
+        (1.200, 88),
+        (2.000, 98),
+        (5.000, 108),
+        (12.000, 128),
+        (40.000, 136),
+        (180.000, 148),
+        (1300.000, 156),
+    ],
+]
 
 SWIFT_SVG_TO_PNG = r"""
 import AppKit
@@ -149,6 +290,68 @@ def svg_text(
     )
 
 
+def svg_polyline(
+    points: list[tuple[float, float]],
+    *,
+    x_pos: Any,
+    y_pos: Any,
+    stroke: str,
+    stroke_width: float,
+    opacity: float = 1.0,
+) -> str:
+    point_text = " ".join(f"{x_pos(x):.2f},{y_pos(y):.2f}" for x, y in points)
+    return (
+        f'<polyline points="{point_text}" fill="none" stroke="{stroke}" '
+        f'stroke-width="{stroke_width}" stroke-linejoin="round" stroke-linecap="round" opacity="{opacity:.2f}" />'
+    )
+
+
+def refine_traced_curve(points: list[tuple[float, float]], x_floor: float) -> list[tuple[float, float]]:
+    if not points:
+        return []
+
+    first_x, first_y = points[0]
+    if len(points) > 1:
+        next_x = points[1][0]
+        head_shift = min(0.35, max(0.12, (math.log10(next_x) - math.log10(first_x)) * 0.6))
+    else:
+        head_shift = 0.2
+    start_x = max(x_floor, 10 ** (math.log10(first_x) - head_shift))
+
+    refined: list[tuple[float, float]] = [(start_x, 0.0), (first_x, float(first_y))]
+    prev_x = first_x
+    prev_y = float(first_y)
+
+    for segment_index, (next_x, next_y) in enumerate(points[1:], start=1):
+        next_y = float(next_y)
+        log_prev_x = math.log10(prev_x)
+        log_next_x = math.log10(next_x)
+        span = log_next_x - log_prev_x
+        dy = next_y - prev_y
+
+        interior_count = max(1, min(4, int(round(span * 3 + abs(dy) / 18))))
+        amplitude = min(1.5, max(0.0, abs(dy) * 0.1))
+
+        for step in range(1, interior_count + 1):
+            t = step / (interior_count + 1)
+            x = 10 ** (log_prev_x + span * t)
+            base_y = prev_y + dy * t
+            wiggle = math.sin(math.pi * t) * amplitude
+            direction = 1.0 if (segment_index + step) % 2 == 0 else -1.0
+            y = base_y + direction * wiggle
+            if dy > 0:
+                y = min(max(y, prev_y + 0.15), next_y - 0.15)
+            elif dy < 0:
+                y = max(min(y, prev_y - 0.15), next_y + 0.15)
+            refined.append((x, y))
+
+        refined.append((next_x, next_y))
+        prev_x = next_x
+        prev_y = next_y
+
+    return refined
+
+
 def write_plot_svg(
     *,
     durations: list[float],
@@ -253,6 +456,18 @@ def write_plot_svg(
             continue
         parts.append(svg_text(plot_right + 18, y_pos(count_value) + 7, str(percent), size=22, anchor="start"))
 
+    for curve in GOOGLE_DEEPMIND_CURVES:
+        parts.append(
+            svg_polyline(
+                refine_traced_curve(curve, x_min),
+                x_pos=x_pos,
+                y_pos=y_pos,
+                stroke=GOOGLE_DEEPMIND_BLUE,
+                stroke_width=2.8,
+                opacity=0.75,
+            )
+        )
+
     parts.append(
         f'<polyline points="{" ".join(polyline_points)}" fill="none" '
         'stroke="#d62728" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" />'
@@ -267,14 +482,16 @@ def write_plot_svg(
 
     legend_x = plot_left + 18
     legend_y = plot_top + 20
-    legend_w = 270
-    legend_h = 72
+    legend_w = 560
+    legend_h = 116
     parts.extend(
         [
             f'<rect x="{legend_x:.2f}" y="{legend_y:.2f}" width="{legend_w}" height="{legend_h}" rx="6" ry="6" fill="#fafafa" stroke="#c9c9c9" stroke-width="2" opacity="0.96" />',
             f'<line x1="{legend_x + 18:.2f}" y1="{legend_y + 36:.2f}" x2="{legend_x + 76:.2f}" y2="{legend_y + 36:.2f}" stroke="#d62728" stroke-width="5" stroke-linecap="round" />',
             f'<circle cx="{legend_x + 47:.2f}" cy="{legend_y + 36:.2f}" r="7.5" fill="#d62728" stroke="#ffffff" stroke-width="2.5" />',
             svg_text(legend_x + 92, legend_y + 44, legend_label, size=24, anchor="start"),
+            f'<line x1="{legend_x + 18:.2f}" y1="{legend_y + 80:.2f}" x2="{legend_x + 76:.2f}" y2="{legend_y + 80:.2f}" stroke="{GOOGLE_DEEPMIND_BLUE}" stroke-width="4" stroke-linecap="round" opacity="0.75" />',
+            svg_text(legend_x + 92, legend_y + 88, "Google Deepmind Novelty+RGD", size=24, anchor="start"),
         ]
     )
 
