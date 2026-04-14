@@ -1,13 +1,13 @@
 # PushWorld Recursive Heuristic
 
-This repo experiments with a recursive heuristic for Google DeepMind's PushWorld benchmark.
+This repo experiments with a recursive heuristic for Google DeepMind's PushWorld benchmark. It performs better than any classical heuristic previously known.
 
-## PushWorld in one minute
+## What is PushWorld?
 
 PushWorld is basically Sokoban with polyominoes.
 
 - The player moves up, down, left, or right.
-- If the player pushes into a box, the whole contacted chain moves one cell if nothing hits a wall.
+- The player can walk into boxes and push them towards their goals.
 - The player and boxes can be multi-cell shapes, not just single tiles.
 - Boxes are weightless, so one push can move several touching boxes at once.
 - Not every box has a target. Some boxes are just tools or obstacles.
@@ -31,8 +31,7 @@ You will need:
 - a C++20 compiler available as `c++`
 - `ffmpeg` for solution videos
 
-If you do not already have the DeepMind `pushworld` repo checked out, clone it as the sibling `pushworld` directory before running anything here.
-
+If you do not already have the DeepMind `pushworld` repo checked out, clone it as the sibling `pushworld` directory before running anything here. Their repo is [here](https://github.com/google-deepmind/pushworld).
 ## Run the recursive heuristic
 
 From this repo, run:
