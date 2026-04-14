@@ -1,8 +1,8 @@
 # PushWorld Recursive Heuristic
 
-This repo experiments with a recursive heuristic for Google DeepMind's PushWorld benchmark.
+This repo experiments with a recursive heuristic for Google DeepMind's PushWorld benchmark, that performs better than any classical heuristic previously klnown.
 
-## PushWorld in one minute
+## What is PushWorld?
 
 PushWorld is basically Sokoban with polyominoes.
 
