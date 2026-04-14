@@ -31,8 +31,7 @@ You will need:
 - a C++20 compiler available as `c++`
 - `ffmpeg` for solution videos
 
-If you do not already have the DeepMind `pushworld` repo checked out, clone it as the sibling `pushworld` directory before running anything here.
-
+If you do not already have the DeepMind `pushworld` repo checked out, clone it as the sibling `pushworld` directory before running anything here. Their repo is [here](https://github.com/google-deepmind/pushworld).
 ## Run the recursive heuristic
 
 From this repo, run:
