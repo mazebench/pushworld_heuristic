@@ -1,6 +1,6 @@
 # PushWorld Recursive Heuristic
 
-This repo experiments with a recursive heuristic for Google DeepMind's PushWorld benchmark. It performs better than any classical heuristic previously known.
+This repo experiments with a recursive heuristic for Google DeepMind's [PushWorld](https://deepmind-pushworld.github.io/play/). It performs better than any classical heuristic previously known.
 
 ![Recursive Heuristic vs Google Deepmind Novelty+RGD](master_summary_solved_curve.png)
 
