@@ -7,7 +7,7 @@ This repo experiments with a recursive heuristic for Google DeepMind's PushWorld
 PushWorld is basically Sokoban with polyominoes.
 
 - The player moves up, down, left, or right.
-- If the player pushes into a box, the whole contacted chain moves one cell if nothing hits a wall.
+- The player can walk into boxes and push them towards their goals.
 - The player and boxes can be multi-cell shapes, not just single tiles.
 - Boxes are weightless, so one push can move several touching boxes at once.
 - Not every box has a target. Some boxes are just tools or obstacles.
